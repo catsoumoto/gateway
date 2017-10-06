@@ -11,9 +11,6 @@ var Server = /** @class */ (function () {
             login: 'fravaud',
             password: 'BBjakmlc100489'
         });
-        this.rabConnection.on('ready', function () {
-            console.log('Rabbit Connect!!');
-        });
         this.app = express();
         this.app.use(timeout("60s"));
         this.app.use(bodyParser.json());
@@ -39,6 +36,9 @@ var Server = /** @class */ (function () {
     }
     Server.prototype.start = function () {
         this.initRoutes();
+        this.rabConnection.on('ready', function () {
+            console.log('Rabbit Connect!!');
+        });
         this.app.listen(9999);
         console.log("Listening on port 9999...");
     };
