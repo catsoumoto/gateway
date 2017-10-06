@@ -1,11 +1,20 @@
 import * as  bodyParser from "body-parser";
 import * as timeout from "connect-timeout";
 import * as express from "express";
+import * as amqp from "amqp";
 
 export class Server {
     public app: express.Application;
+    public rabConnection: any;
 
     constructor() {
+        this.rabConnection = amqp.createConnection({ 
+            host: 'rabbitserver'
+            , login: 'fravaud'
+            , password: 'BBjakmlc100489' });
+        this.rabConnection.on('ready', function() {
+            console.log('Rabbit Connect!!');
+        });
         this.app = express();
         this.app.use(timeout("60s"));
         this.app.use( bodyParser.json() );
@@ -42,10 +51,27 @@ export class Server {
         let router: express.Router;
         router = express.Router();
 
-        router.get("/api/test", (_req, res) => {
-            res.status(200).json("Test");
+        router.get("/api/test", (_req, res) => {  
+            let uuid = this.uuid();
+            this.rabConnection.publish("worker", uuid);
+            this.rabConnection.queue(uuid, function (q) {
+                // Catch all messages
+                q.bind('#');
+                
+                // Receive messages
+                q.subscribe(function (message) {
+                    console.log(message);
+                    res.status(200).json("Test");
+                });
+            });
         });
 
         this.app.use(router);
+    }
+
+    public uuid() {
+        const s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+        const date = () => (new Date()).getTime().toString(36);
+        return `${s4() + s4()}-${s4()}-${s4()}-${s4()}-${s4() + s4() + s4()}-${date()}`;
     }
 }
