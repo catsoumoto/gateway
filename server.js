@@ -48,7 +48,7 @@ var Server = /** @class */ (function () {
         router = express.Router();
         router.get("/api/test", function (_req, res) {
             var uuid = _this.uuid();
-            _this.rabConnection.publish("worker", uuid);
+            _this.rabConnection.publish("worker", { uuid: uuid });
             _this.rabConnection.queue(uuid, function (q) {
                 // Catch all messages
                 q.bind('#');

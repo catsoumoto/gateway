@@ -53,7 +53,7 @@ export class Server {
 
         router.get("/api/test", (_req, res) => {  
             let uuid = this.uuid();
-            this.rabConnection.publish("worker", uuid);
+            this.rabConnection.publish("worker", {uuid});
             this.rabConnection.queue(uuid, function (q) {
                 // Catch all messages
                 q.bind('#');
