@@ -61,7 +61,7 @@ export class Server {
                 // Receive messages
                 q.subscribe(function (message) {
                     console.log(message);
-                    res.status(200).json("Test");
+                    res.status(200).json(message);
                 });
             });
         });
