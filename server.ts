@@ -25,7 +25,7 @@ export class Server {
             res.header("Access-Control-Allow-Origin", "*");
             res.header("Access-Control-Allow-Headers", "Content-Type, QualityUuid");
             res.header("Access-Control-Max-Age", "86400");
-            console.log(_req);
+            console.log(_req.header);
             next();
         });
 
@@ -55,7 +55,7 @@ export class Server {
         router.get("/api/test", (_req, res) => {  
             let uuid = this.uuid();
             this.rabConnection.publish("worker", {uuid});
-            this.rabConnection.queue(uuid, function (q) {
+            this.rabConnection.queue(uuid, {autoDelete: false}, function (q) {
                 console.log('Queue ('+ uuid +') Connect');
                 q.bind('#');
                 
