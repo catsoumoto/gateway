@@ -56,9 +56,7 @@ var Server = /** @class */ (function () {
                 q.subscribe(function (message) {
                     console.log(message);
                     res.status(200).json(message);
-                })
-                    .addCallback(function (res) {
-                    q.unsubscribe(res.consumerTag);
+                    q.unsubscribe(uuid);
                 });
             });
         });

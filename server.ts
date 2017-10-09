@@ -62,10 +62,8 @@ export class Server {
                 q.subscribe(function (message) {
                     console.log(message);
                     res.status(200).json(message);
+                    q.unsubscribe(uuid);
                 })
-                .addCallback(function(res) {
-                    q.unsubscribe(res.consumerTag);
-                });
             });
         });
 
