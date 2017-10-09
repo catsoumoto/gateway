@@ -23,6 +23,7 @@ var Server = /** @class */ (function () {
             res.header("Access-Control-Allow-Origin", "*");
             res.header("Access-Control-Allow-Headers", "Content-Type, QualityUuid");
             res.header("Access-Control-Max-Age", "86400");
+            console.log(_req);
             next();
         });
         this.app.use(function (err, _req, res, next) {
@@ -50,13 +51,12 @@ var Server = /** @class */ (function () {
             var uuid = _this.uuid();
             _this.rabConnection.publish("worker", { uuid: uuid });
             _this.rabConnection.queue(uuid, function (q) {
-                // Catch all messages
+                console.log('Queue (' + uuid + ') Connect');
                 q.bind('#');
-                // Receive messages
                 q.subscribe(function (message) {
                     console.log(message);
                     res.status(200).json(message);
-                    q.unsubscribe(uuid);
+                    q.detroy();
                 });
             });
         });

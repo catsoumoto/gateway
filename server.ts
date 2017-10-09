@@ -25,6 +25,7 @@ export class Server {
             res.header("Access-Control-Allow-Origin", "*");
             res.header("Access-Control-Allow-Headers", "Content-Type, QualityUuid");
             res.header("Access-Control-Max-Age", "86400");
+            console.log(_req);
             next();
         });
 
@@ -55,14 +56,13 @@ export class Server {
             let uuid = this.uuid();
             this.rabConnection.publish("worker", {uuid});
             this.rabConnection.queue(uuid, function (q) {
-                // Catch all messages
+                console.log('Queue ('+ uuid +') Connect');
                 q.bind('#');
                 
-                // Receive messages
                 q.subscribe(function (message) {
                     console.log(message);
                     res.status(200).json(message);
-                    q.unsubscribe(uuid);
+                    q.detroy();
                 })
             });
         });
