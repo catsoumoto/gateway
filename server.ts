@@ -1,17 +1,14 @@
 import * as  bodyParser from "body-parser";
 import * as timeout from "connect-timeout";
 import * as express from "express";
-import * as amqp from "amqp";
+import * as amqplib from "amqplib"
 
 export class Server {
     public app: express.Application;
     public rabConnection: any;
 
     constructor() {
-        this.rabConnection = amqp.createConnection({ 
-            host: 'rabbitserver'
-            , login: 'fravaud'
-            , password: 'BBjakmlc100489' });
+        this.rabConnection = amqplib.connect('amqp://fravaud:BBjakmlc100489@rabbitserver');
         this.app = express();
         this.app.use(timeout("60s"));
         this.app.use( bodyParser.json() );
@@ -41,9 +38,6 @@ export class Server {
     }
     public start() {
         this.initRoutes();
-        this.rabConnection.on('ready', function() {
-            console.log('Rabbit Connect!!');
-        });
         this.app.listen(9999);
         console.log("Listening on port 9999...");
     }
@@ -54,8 +48,28 @@ export class Server {
 
         router.get("/api/test", (_req, res) => {  
             let uuid = this.uuid();
-            this.rabConnection.publish("worker", {uuid});
-            this.rabConnection.queue(uuid, {autoDelete: false}, function (q) {
+
+            this.rabConnection
+                .then((conn) => conn.createChannel())
+                .then((ch) => {
+                    return ch.assertQueue("worker")
+                        .then((ok) => ch.sendToQueue("worker", {uuid}));
+                }).catch((err) => console.warn(err));
+
+            /*this.rabConnection.publish("worker", {uuid});*/
+            this.rabConnection
+                .then((conn) => conn.createChannel())
+                .then((ch) => {
+                    return ch.assertQueue(uuid)
+                        .then((ok) => ch.consume(uuid, (msg) => {
+                            if (msg !== null) {
+                                console.log(msg.content.toString());
+                                ch.ack(msg);
+                            }
+                        }));
+                }).catch((err) => console.warn(err));
+                
+            /*this.rabConnection.queue(uuid, {autoDelete: false}, function (q) {
                 console.log('Queue ('+ uuid +') Connect');
                 q.bind('#');
                 
@@ -64,7 +78,7 @@ export class Server {
                     res.status(200).json(message);
                     q.detroy();
                 })
-            });
+            });*/
         });
 
         this.app.use(router);
